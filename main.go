@@ -1,8 +1,12 @@
 package main
 
 import (
+	"database/sql"
+	"fmt"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	_ "github.com/lib/pq"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -13,26 +17,43 @@ type student struct {
 	Grade int    `json:"grade"`
 }
 
-var students = []student{
-	{ID: 1, Name: "Alice Martin", Grade: 5},
-	{ID: 2, Name: "Barbara Smith", Grade: 1},
-	{ID: 3, Name: "Carl Jones", Grade: 3},
-}
-
-var maxId = 4
+var db *sql.DB
 
 func main() {
+	connStr := "postgresql://localhost:5432/student_management?sslmode=disable"
+	// Connect to database
+	db1, err := sql.Open("postgres", connStr)
+	if err != nil {
+		log.Fatal(err)
+	}
+	db = db1
+
 	router := gin.Default()
 	router.Use(cors.Default())
 
 	router.GET("/students", getStudents)
-	router.GET("/students/:id", getStudentByID)
 	router.POST("/students", postStudents)
+	router.DELETE("/students/:id", deleteStudent)
 
 	_ = router.Run("localhost:8080")
 }
 
 func getStudents(c *gin.Context) {
+	var s student
+	var students []student
+	rows, err := db.Query(`SELECT * FROM students`)
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": fmt.Sprintf("Error reading from DB: %s", err)})
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		err := rows.Scan(&s.ID, &s.Name, &s.Grade)
+		if err != nil {
+			c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": fmt.Sprintf("Error scanning row: %s", err)})
+		}
+		students = append(students, s)
+	}
 	c.IndentedJSON(http.StatusOK, students)
 }
 
@@ -43,25 +64,34 @@ func postStudents(c *gin.Context) {
 		return
 	}
 
-	newStudent.ID = maxId
-	maxId = maxId + 1
+	var lastInsertId int
+	err := db.QueryRow("INSERT INTO students (name, grade) VALUES ($1, $2) RETURNING id", newStudent.Name, newStudent.Grade).Scan(&lastInsertId)
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": fmt.Sprintf("Error scanning row: %s", err)})
+	}
 
-	students = append(students, newStudent)
+	newStudent.ID = lastInsertId
 	c.IndentedJSON(http.StatusCreated, newStudent)
 }
 
-func getStudentByID(c *gin.Context) {
+func deleteStudent(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "ID is not an integer"})
 		return
 	}
 
-	for _, s := range students {
-		if s.ID == id {
-			c.IndentedJSON(http.StatusOK, s)
-			return
-		}
+	res, err := db.Exec("DELETE FROM students WHERE ID=$1", id)
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": fmt.Sprintf("Error scanning row: %s", err)})
 	}
-	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "student not found"})
+	count, err := res.RowsAffected()
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": fmt.Sprintf("Error checking for affected count: %s", err)})
+	}
+	if count == 0 {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "ID does not match record in database, no rows deleted"})
+		return
+	}
+	c.IndentedJSON(http.StatusOK, gin.H{"message": "success"})
 }

@@ -7,7 +7,12 @@ function App() {
     const fetchStudents = async () => {
         const response = await fetch("http://localhost:8080/students");
         const students = await response.json();
-        setStudents(students);
+        console.log('stu', students);
+        if (response.status === 200 && students !== null) {
+            setStudents(students);
+        } else {
+            console.error('error from api: ' + JSON.stringify(students));
+        }
     };
 
     useEffect(() => {
@@ -40,6 +45,14 @@ function App() {
         }
     }
 
+    const deleteStudent = async (id) => {
+        const response = await fetch(`http://localhost:8080/students/${id}`, {method: 'DELETE'});
+        if (response.status === 201) {
+            const json = await response.json();
+            setStudents([...students, json]);
+        }
+    }
+
     return (
         <div className="App">
             <h1>List of students</h1>
@@ -55,6 +68,7 @@ function App() {
             <button onClick={createStudent}>Add student</button>
             <h1>Update existing student</h1>
             <h1>Delete student</h1>
+            <button onClick={() => deleteStudent(10)}>Delete student at ID=10</button>
         </div>
     );
 }
