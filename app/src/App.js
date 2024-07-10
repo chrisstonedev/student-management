@@ -45,20 +45,40 @@ function App() {
         }
     }
 
-    const deleteStudent = async (id) => {
-        const response = await fetch(`http://localhost:8080/students/${id}`, {method: 'DELETE'});
-        if (response.status === 201) {
-            const json = await response.json();
-            setStudents([...students, json]);
+    const deleteId = useId();
+    const [idToDelete, setIdToDelete] = useState(0);
+
+    const deleteStudent = async () => {
+        if (idToDelete < 1) {
+            return;
+        }
+        const response = await fetch(`http://localhost:8080/students/${idToDelete}`, {method: 'DELETE'});
+        if (response.status === 200) {
+            setStudents(students.filter(s => s.id !== idToDelete))
         }
     }
 
     return (
         <div className="App">
             <h1>List of students</h1>
-            {students.map((student) => (
-                <p key={student.id}>{student.name} (grade {student.grade})</p>
-            ))}
+            <table style={{margin: '0 auto', border: '1px solid black'}}>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Grade</th>
+                </tr>
+                </thead>
+                <tbody>
+                {students.map((student) => (
+                    <tr key={student.id}>
+                        <td>{student.id}</td>
+                        <td>{student.name}</td>
+                        <td>{student.grade}</td>
+                    </tr>
+                ))}
+                </tbody>
+            </table>
             <h1>Add student</h1>
             <label htmlFor={newNameId}>Name</label>
             <input id={newNameId} value={newName} onInput={e => setNewName(e.target?.value)} required={true}/>
@@ -68,7 +88,10 @@ function App() {
             <button onClick={createStudent}>Add student</button>
             <h1>Update existing student</h1>
             <h1>Delete student</h1>
-            <button onClick={() => deleteStudent(10)}>Delete student at ID=10</button>
+            <label htmlFor={deleteId}>Name</label>
+            <input id={deleteId} value={idToDelete} onInput={e => setIdToDelete(Number(e.target?.value))} type="number"
+                   min={1}/>
+            <button onClick={deleteStudent}>Delete student at ID=10</button>
         </div>
     );
 }
