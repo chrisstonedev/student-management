@@ -7,7 +7,6 @@ function App() {
     const fetchStudents = async () => {
         const response = await fetch("http://localhost:8080/students");
         const students = await response.json();
-        console.log('stu', students);
         if (response.status === 200 && students !== null) {
             setStudents(students);
         } else {
@@ -18,6 +17,7 @@ function App() {
     useEffect(() => {
         fetchStudents().then();
     }, []);
+
     const newNameId = useId();
     const newGradeId = useId();
     const [newName, setNewName] = useState('');
@@ -34,7 +34,7 @@ function App() {
         const requestOptions = {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(newStudent)
+            body: JSON.stringify(newStudent),
         };
         const response = await fetch("http://localhost:8080/students", requestOptions);
         if (response.status === 201) {
@@ -55,6 +55,35 @@ function App() {
         const response = await fetch(`http://localhost:8080/students/${idToDelete}`, {method: 'DELETE'});
         if (response.status === 200) {
             setStudents(students.filter(s => s.id !== idToDelete))
+        }
+    }
+
+    const idToUpdateId = useId();
+    const updateNameId = useId();
+    const updateGradeId = useId();
+    const [idToUpdate, setIdToUpdate] = useState(0);
+    const [updateName, setUpdateName] = useState('');
+    const [updateGrade, setUpdateGrade] = useState(5);
+
+    const updateStudent = async () => {
+        if (idToUpdate < 1) {
+            return;
+        }
+        const updateStudentRequest = {
+            id: idToUpdate,
+            name: updateName,
+            grade: updateGrade,
+        };
+        const requestOptions = {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(updateStudentRequest),
+        };
+        const response = await fetch(`http://localhost:8080/students/${idToUpdate}`, requestOptions);
+
+        if (response.status === 200) {
+            const updatedStudent = await response.json();
+            setStudents([...students.filter(s => s.id !== idToUpdate), updatedStudent ]);
         }
     }
 
@@ -87,11 +116,19 @@ function App() {
                    min={1} max={12}/>
             <button onClick={createStudent}>Add student</button>
             <h1>Update existing student</h1>
+            <label htmlFor={idToUpdateId}>ID</label>
+            <input id={idToUpdateId} value={idToUpdate} onInput={e => setIdToUpdate(Number(e.target?.value))} required={true} type="number"/>
+            <label htmlFor={updateNameId}>Name</label>
+            <input id={updateNameId} value={updateName} onInput={e => setUpdateName(e.target?.value)} required={true}/>
+            <label htmlFor={updateGradeId}>Name</label>
+            <input id={updateGradeId} value={updateGrade} onInput={e => setUpdateGrade(Number(e.target?.value))} type="number"
+                   min={1} max={12}/>
+            <button onClick={updateStudent}>Update student</button>
             <h1>Delete student</h1>
             <label htmlFor={deleteId}>Name</label>
             <input id={deleteId} value={idToDelete} onInput={e => setIdToDelete(Number(e.target?.value))} type="number"
                    min={1}/>
-            <button onClick={deleteStudent}>Delete student at ID=10</button>
+            <button onClick={deleteStudent}>Delete student</button>
         </div>
     );
 }
