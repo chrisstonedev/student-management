@@ -1,0 +1,55 @@
+### get students
+GET http://localhost:8080/students
+Content-Type: application/json
+
+> {%
+    client.test("Returns Object", function () {
+        client.assert(response.status === 200)
+    });
+%}
+
+### post student
+POST http://localhost:8080/students
+Content-Type: application/json
+
+{
+  "id": 4,
+  "name": "Daniel Beckett",
+  "grade": 4
+}
+
+> {%
+    client.test("Returns Created", function () {
+        client.assert(response.status === 201)
+    });
+%}
+
+### get student by ID
+GET http://localhost:8080/students/2
+Content-Type: application/json
+
+> {%
+    client.test("Returns Object", function () {
+        client.assert(response.status === 200)
+    });
+%}
+
+### get student by ID (not found)
+GET http://localhost:8080/students/5
+Content-Type: application/json
+
+> {%
+    client.test("Returns Not Found", function () {
+        client.assert(response.status === 404)
+    });
+%}
+
+### get student by ID (not an integer)
+GET http://localhost:8080/students/z
+Content-Type: application/json
+
+> {%
+    client.test("Returns Bad Request", function () {
+        client.assert(response.status === 400)
+    });
+%}
