@@ -1,15 +1,16 @@
 package main
 
 import (
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
 )
 
 type student struct {
-	ID    int
-	Name  string
-	Grade int
+	ID    int    `json:"id"`
+	Name  string `json:"name"`
+	Grade int    `json:"grade"`
 }
 
 var students = []student{
@@ -18,8 +19,12 @@ var students = []student{
 	{ID: 3, Name: "Carl Jones", Grade: 3},
 }
 
+var maxId = 4
+
 func main() {
 	router := gin.Default()
+	router.Use(cors.Default())
+
 	router.GET("/students", getStudents)
 	router.GET("/students/:id", getStudentByID)
 	router.POST("/students", postStudents)
@@ -38,6 +43,9 @@ func postStudents(c *gin.Context) {
 		return
 	}
 
+	newStudent.ID = maxId
+	maxId = maxId + 1
+
 	students = append(students, newStudent)
 	c.IndentedJSON(http.StatusCreated, newStudent)
 }
@@ -49,9 +57,9 @@ func getStudentByID(c *gin.Context) {
 		return
 	}
 
-	for _, a := range students {
-		if a.ID == id {
-			c.IndentedJSON(http.StatusOK, a)
+	for _, s := range students {
+		if s.ID == id {
+			c.IndentedJSON(http.StatusOK, s)
 			return
 		}
 	}
