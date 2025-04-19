@@ -2,7 +2,9 @@ import './App.css';
 import { useEffect, useId, useState } from 'react';
 
 function App() {
-  const [students, setStudents] = useState([]);
+  const [students, setStudents] = useState<
+    { id: number; name: string; grade: string }[]
+  >([]);
 
   const fetchStudents = async () => {
     const response = await fetch('http://localhost:8080/students');
@@ -125,14 +127,22 @@ function App() {
       <input
         id={newNameId}
         value={newName}
-        onInput={(e) => setNewName(e.target?.value)}
+        onInput={({ target }) => {
+          if (target instanceof HTMLInputElement) {
+            setNewName(target?.value);
+          }
+        }}
         required={true}
       />
       <label htmlFor={newGradeId}>Name</label>
       <input
         id={newGradeId}
         value={newGrade}
-        onInput={(e) => setNewGrade(Number(e.target?.value))}
+        onInput={({ target }) => {
+          if (target instanceof HTMLInputElement) {
+            setNewGrade(Number(target?.value));
+          }
+        }}
         type="number"
         min={1}
         max={12}
@@ -143,7 +153,11 @@ function App() {
       <input
         id={idToUpdateId}
         value={idToUpdate}
-        onInput={(e) => setIdToUpdate(Number(e.target?.value))}
+        onInput={({ target }) => {
+          if (target instanceof HTMLInputElement) {
+            setIdToUpdate(Number(target.value));
+          }
+        }}
         required={true}
         type="number"
       />
@@ -151,14 +165,22 @@ function App() {
       <input
         id={updateNameId}
         value={updateName}
-        onInput={(e) => setUpdateName(e.target?.value)}
+        onInput={({ target }) => {
+          if (target instanceof HTMLInputElement) {
+            setUpdateName(target.value);
+          }
+        }}
         required={true}
       />
       <label htmlFor={updateGradeId}>Name</label>
       <input
         id={updateGradeId}
         value={updateGrade}
-        onInput={(e) => setUpdateGrade(Number(e.target?.value))}
+        onInput={({ target }) => {
+          if (target instanceof HTMLInputElement) {
+            setUpdateGrade(Number(target.value));
+          }
+        }}
         type="number"
         min={1}
         max={12}
@@ -169,7 +191,11 @@ function App() {
       <input
         id={deleteId}
         value={idToDelete}
-        onInput={(e) => setIdToDelete(Number(e.target?.value))}
+        onInput={({ target }) => {
+          if (target instanceof HTMLInputElement) {
+            setIdToDelete(Number(target.value));
+          }
+        }}
         type="number"
         min={1}
       />
