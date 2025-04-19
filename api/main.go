@@ -20,7 +20,10 @@ type student struct {
 var db *sql.DB
 
 func main() {
-	connStr := "postgresql://localhost:5432/student_management?sslmode=disable"
+	user := "student_admin"
+	password := "super_secure_password"
+	database := "student_management"
+	connStr := fmt.Sprintf("postgresql://%s:%s@localhost:5432/%s?sslmode=disable", user, password, database)
 
 	db1, err := sql.Open("postgres", connStr)
 	if err != nil {

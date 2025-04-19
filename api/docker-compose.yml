@@ -1,0 +1,16 @@
+version: "3"
+services:
+  db:
+    image: "postgres:17.4"
+    container_name: "student_db"
+    environment:
+      POSTGRES_USER: student_admin
+      POSTGRES_PASSWORD: super_secure_password
+      POSTGRES_DB: student_management
+    ports:
+      - "5432:5432"
+    volumes:
+      - student_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+volumes:
+  student_data:
